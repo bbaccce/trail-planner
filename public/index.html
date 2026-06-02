@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Trail Planner · Czech Trails</title>
+<title>Pandors Trail Planner</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%230d1a0f'/%3E%3Cpolygon points='16,4 29,27 3,27' fill='%235db87a'/%3E%3Cpolygon points='24,13 31,27 17,27' fill='%230d1a0f' opacity='0.5'/%3E%3C/svg%3E">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -15,7 +16,7 @@
 body{background:var(--bg);color:var(--text);font-family:var(--font-body);min-height:100vh}
 .app{max-width:700px;margin:0 auto;padding:1.5rem 1rem 3rem}
 .header{margin-bottom:2rem;padding-bottom:1.25rem;border-bottom:1px solid var(--border)}
-.header-top{display:flex;align-items:baseline;gap:12px;margin-bottom:4px}
+.header-top{display:flex;align-items:center;gap:12px;margin-bottom:4px}
 h1{font-family:var(--font-display);font-size:28px;font-weight:700;color:#fff;letter-spacing:-0.5px}
 .region-badge{font-family:var(--font-mono);font-size:11px;color:var(--green);letter-spacing:0.12em;padding:3px 8px;border:1px solid var(--green-dim);border-radius:3px;transition:all 0.2s}
 .subtitle{font-size:13px;color:var(--muted)}
@@ -60,7 +61,8 @@ textarea::placeholder{color:var(--muted)}
 <div class="app">
   <div class="header">
     <div class="header-top">
-      <h1>Trail Planner</h1>
+      <svg width="28" height="28" viewBox="0 0 32 32" style="flex-shrink:0;margin-bottom:2px" aria-hidden="true"><polygon points="16,3 30,28 2,28" fill="#5db87a"/><polygon points="24,12 31,28 17,28" fill="#0d1a0f" opacity="0.45"/></svg>
+      <h1>Pandors Trail Planner</h1>
       <span class="region-badge" id="region-badge">ORLICKÉ HORY</span>
     </div>
     <p class="subtitle" id="region-subtitle">AI agent · finds routes near Frýdlant nad Orlicí matching your preferences</p>
