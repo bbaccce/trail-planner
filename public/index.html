@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trail Planner · Orlické hory</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d1a0f;--surface:#131f14;--surface2:#1a2b1c;--border:#2a3e2c;
+  --green:#5db87a;--green-dim:#3a7a50;--text:#d4e8d6;--muted:#7a9c7e;
+  --font-display:'Playfair Display',serif;--font-body:'DM Sans',sans-serif;--font-mono:'DM Mono',monospace;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);min-height:100vh}
+.app{max-width:700px;margin:0 auto;padding:1.5rem 1rem 3rem}
+.header{margin-bottom:2rem;padding-bottom:1.25rem;border-bottom:1px solid var(--border)}
+.header-top{display:flex;align-items:baseline;gap:12px;margin-bottom:4px}
+h1{font-family:var(--font-display);font-size:28px;font-weight:700;color:#fff;letter-spacing:-0.5px}
+.region{font-family:var(--font-mono);font-size:11px;color:var(--green);letter-spacing:0.12em;padding:3px 8px;border:1px solid var(--green-dim);border-radius:3px}
+.subtitle{font-size:13px;color:var(--muted)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.form-full{grid-column:1/-1}
+.field{display:flex;flex-direction:column;gap:6px}
+label{font-size:11px;font-weight:500;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase}
+.slider-row{display:flex;align-items:center;gap:10px}
+input[type=range]{flex:1;-webkit-appearance:none;height:3px;background:var(--border);border-radius:2px;outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--green);cursor:pointer;border:2px solid var(--bg)}
+.val{font-family:var(--font-mono);font-size:13px;color:var(--green);min-width:52px;text-align:right}
+.checks{display:flex;gap:8px;flex-wrap:wrap}
+.check-btn{font-size:12px;font-family:var(--font-mono);color:var(--muted);background:transparent;border:1px solid var(--border);border-radius:4px;padding:5px 12px;cursor:pointer;transition:all 0.15s}
+.check-btn.active{color:var(--bg);background:var(--green);border-color:var(--green)}
+textarea{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--font-body);font-size:13px;padding:10px 12px;resize:none;outline:none;transition:border-color 0.15s}
+textarea:focus{border-color:var(--green-dim)}
+textarea::placeholder{color:var(--muted)}
+.go-btn{width:100%;margin-top:4px;padding:13px;background:var(--green);color:var(--bg);font-family:var(--font-display);font-size:15px;font-weight:700;border:none;border-radius:6px;cursor:pointer;letter-spacing:0.02em;transition:opacity 0.15s}
+.go-btn:hover{opacity:0.88}
+.go-btn:disabled{opacity:0.4;cursor:not-allowed}
+.result-area{margin-top:1.75rem}
+.result-header{display:flex;align-items:center;gap:10px;margin-bottom:1rem;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.result-label{font-family:var(--font-mono);font-size:11px;color:var(--muted);letter-spacing:0.1em}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 1.4s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+.dot.done{animation:none}
+.result-text{font-size:14px;line-height:1.85;color:var(--text)}
+.result-text strong{color:#fff;font-weight:500}
+.result-text h2{font-family:var(--font-display);font-size:18px;color:#fff;margin:1.4rem 0 0.5rem}
+.result-text h3{font-family:var(--font-display);font-size:16px;color:#fff;margin:1.2rem 0 0.4rem}
+.result-text li{margin-left:1rem;margin-bottom:4px}
+.result-text p{margin-bottom:0.75rem}
+.result-text em{color:var(--green)}
+.err{font-size:13px;color:#e87a5d;background:rgba(232,122,93,0.08);border:1px solid rgba(232,122,93,0.25);border-radius:6px;padding:10px 14px}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="header-top">
+      <h1>Trail Planner</h1>
+      <span class="region">ORLICKÉ HORY</span>
+    </div>
+    <p class="subtitle">AI agent · finds routes near Frýdlant nad Orlicí matching your preferences</p>
+  </div>
+
+  <div class="form-grid">
+    <div class="field">
+      <label>Distance (km)</label>
+      <div class="slider-row">
+        <input type="range" id="dist" min="3" max="30" value="12" step="1" oninput="document.getElementById('dist-val').textContent=this.value+' km'">
+        <span class="val" id="dist-val">12 km</span>
+      </div>
+    </div>
+    <div class="field">
+      <label>Elevation gain (m)</label>
+      <div class="slider-row">
+        <input type="range" id="elev" min="0" max="800" value="300" step="25" oninput="document.getElementById('elev-val').textContent=this.value+' m'">
+        <span class="val" id="elev-val">300 m</span>
+      </div>
+    </div>
+    <div class="field">
+      <label>Duration</label>
+      <div class="slider-row">
+        <input type="range" id="dur" min="1" max="10" value="4" step="0.5" oninput="document.getElementById('dur-val').textContent=this.value+' h'">
+        <span class="val" id="dur-val">4 h</span>
+      </div>
+    </div>
+    <div class="field">
+      <label>Difficulty</label>
+      <div class="checks" id="diff-btns">
+        <button class="check-btn" onclick="toggleDiff(this)">Easy</button>
+        <button class="check-btn active" onclick="toggleDiff(this)">Moderate</button>
+        <button class="check-btn" onclick="toggleDiff(this)">Challenging</button>
+      </div>
+    </div>
+    <div class="field form-full">
+      <label>Vibe / preferences</label>
+      <div class="checks" id="vibe-btns">
+        <button class="check-btn" onclick="toggleVibe(this)">Summit views</button>
+        <button class="check-btn active" onclick="toggleVibe(this)">Forest paths</button>
+        <button class="check-btn" onclick="toggleVibe(this)">Waterfalls</button>
+        <button class="check-btn" onclick="toggleVibe(this)">Loop route</button>
+        <button class="check-btn" onclick="toggleVibe(this)">Dog-friendly</button>
+        <button class="check-btn" onclick="toggleVibe(this)">Less crowded</button>
+      </div>
+    </div>
+    <div class="field form-full">
+      <label>Anything else?</label>
+      <textarea id="extra" rows="2" placeholder="e.g. starting from Říčky, avoiding road sections, good for autumn..."></textarea>
+    </div>
+  </div>
+
+  <button class="go-btn" id="go-btn" onclick="planTrails()">Find my trail →</button>
+
+  <div class="result-area" id="result-area" style="display:none">
+    <div class="result-header">
+      <div class="dot" id="status-dot"></div>
+      <span class="result-label" id="status-label">Searching trails...</span>
+    </div>
+    <div id="result-content"></div>
+  </div>
+</div>
+
+<script>
+function toggleDiff(btn) {
+  document.querySelectorAll('#diff-btns .check-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+function toggleVibe(btn) { btn.classList.toggle('active'); }
+
+function renderMarkdown(text) {
+  return text
+    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+    .replace(/^# (.+)$/gm, '<h2>$1</h2>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/^- (.+)$/gm, '<li>$1</li>')
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/^/, '<p>').replace(/$/, '</p>');
+}
+
+async function planTrails() {
+  const dist = document.getElementById('dist').value;
+  const elev = document.getElementById('elev').value;
+  const dur = document.getElementById('dur').value;
+  const diff = document.querySelector('#diff-btns .check-btn.active')?.textContent || 'Moderate';
+  const vibes = [...document.querySelectorAll('#vibe-btns .check-btn.active')].map(b => b.textContent);
+  const extra = document.getElementById('extra').value;
+
+  const btn = document.getElementById('go-btn');
+  btn.disabled = true; btn.textContent = 'Searching…';
+
+  const area = document.getElementById('result-area');
+  const content = document.getElementById('result-content');
+  const dot = document.getElementById('status-dot');
+  const label = document.getElementById('status-label');
+
+  area.style.display = 'block';
+  dot.className = 'dot';
+  label.textContent = 'Agent searching trail conditions…';
+  content.innerHTML = '<div class="result-text" id="stream-out"></div>';
+
+  try {
+    const res = await fetch('/api/trails', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ dist, elev, dur, diff, vibes, extra })
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || 'Server error');
+    }
+
+    label.textContent = 'Streaming recommendations…';
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let raw = '';
+    const out = document.getElementById('stream-out');
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      const chunk = decoder.decode(value);
+      const lines = chunk.split('\n');
+
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          const data = line.slice(6);
+          if (data === '[DONE]') break;
+          try {
+            const { text } = JSON.parse(data);
+            raw += text;
+            out.innerHTML = renderMarkdown(raw);
+          } catch {}
+        }
+      }
+    }
+
+    dot.classList.add('done');
+    label.textContent = 'Trails found';
+    btn.disabled = false; btn.textContent = 'Find my trail →';
+
+  } catch (e) {
+    btn.disabled = false; btn.textContent = 'Find my trail →';
+    dot.style.background = '#e87a5d'; dot.style.animation = 'none';
+    label.textContent = 'Error';
+    content.innerHTML = `<p class="err">${e.message}</p>`;
+  }
+}
+</script>
+</body>
+</html>
