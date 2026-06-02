@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Trail Planner · Orlické hory</title>
+<title>Trail Planner · Czech Trails</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -17,8 +17,12 @@ body{background:var(--bg);color:var(--text);font-family:var(--font-body);min-hei
 .header{margin-bottom:2rem;padding-bottom:1.25rem;border-bottom:1px solid var(--border)}
 .header-top{display:flex;align-items:baseline;gap:12px;margin-bottom:4px}
 h1{font-family:var(--font-display);font-size:28px;font-weight:700;color:#fff;letter-spacing:-0.5px}
-.region{font-family:var(--font-mono);font-size:11px;color:var(--green);letter-spacing:0.12em;padding:3px 8px;border:1px solid var(--green-dim);border-radius:3px}
+.region-badge{font-family:var(--font-mono);font-size:11px;color:var(--green);letter-spacing:0.12em;padding:3px 8px;border:1px solid var(--green-dim);border-radius:3px;transition:all 0.2s}
 .subtitle{font-size:13px;color:var(--muted)}
+.region-switcher{display:flex;gap:8px;margin-bottom:1.5rem}
+.region-btn{font-family:var(--font-mono);font-size:11px;color:var(--muted);background:transparent;border:1px solid var(--border);border-radius:4px;padding:6px 14px;cursor:pointer;transition:all 0.15s;letter-spacing:0.06em}
+.region-btn.active{color:var(--bg);background:var(--green);border-color:var(--green)}
+.region-label{font-size:11px;font-weight:500;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px}
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
 .form-full{grid-column:1/-1}
 .field{display:flex;flex-direction:column;gap:6px}
@@ -57,9 +61,17 @@ textarea::placeholder{color:var(--muted)}
   <div class="header">
     <div class="header-top">
       <h1>Trail Planner</h1>
-      <span class="region">ORLICKÉ HORY</span>
+      <span class="region-badge" id="region-badge">ORLICKÉ HORY</span>
     </div>
-    <p class="subtitle">AI agent · finds routes near Frýdlant nad Orlicí matching your preferences</p>
+    <p class="subtitle" id="region-subtitle">AI agent · finds routes near Frýdlant nad Orlicí matching your preferences</p>
+  </div>
+
+  <div class="field" style="margin-bottom:1.5rem">
+    <span class="region-label">Region</span>
+    <div class="region-switcher">
+      <button class="region-btn active" onclick="setRegion(this, 'orlicke')">Orlické hory</button>
+      <button class="region-btn" onclick="setRegion(this, 'brno')">Brno area</button>
+    </div>
   </div>
 
   <div class="form-grid">
@@ -121,6 +133,29 @@ textarea::placeholder{color:var(--muted)}
 </div>
 
 <script>
+const REGIONS = {
+  orlicke: {
+    badge: 'ORLICKÉ HORY',
+    subtitle: 'AI agent · finds routes near Frýdlant nad Orlicí matching your preferences',
+    prompt: `You are an expert hiking guide for Orlické hory (Eagle Mountains) in Czech Republic, with deep knowledge of trails around Frýdlant nad Orlicí, Říčky v Orlických horách, Deštné v Orlických horách, Zdobnice, Rokytnice v Orlických horách, and Šerlich.`
+  },
+  brno: {
+    badge: 'BRNO AREA',
+    subtitle: 'AI agent · finds routes within 40 km of Brno city centre matching your preferences',
+    prompt: `You are an expert hiking guide for the Brno region in Czech Republic, with deep knowledge of trails within 40 km of Brno city centre. Key areas include: Moravský kras (Macocha abyss, Punkva caves area), Podyjí National Park (Znojmo area), Litenčické vrchy, Ždánický les, Chřiby hills, Bílé Karpaty foothills, Pálava hills (UNESCO biosphere), Blanský les, and the Brno reservoir (Brněnská přehrada) surroundings.`
+  }
+};
+
+let currentRegion = 'orlicke';
+
+function setRegion(btn, key) {
+  document.querySelectorAll('.region-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  currentRegion = key;
+  document.getElementById('region-badge').textContent = REGIONS[key].badge;
+  document.getElementById('region-subtitle').textContent = REGIONS[key].subtitle;
+}
+
 function toggleDiff(btn) {
   document.querySelectorAll('#diff-btns .check-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
@@ -164,7 +199,7 @@ async function planTrails() {
     const res = await fetch('/api/trails', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ dist, elev, dur, diff, vibes, extra })
+      body: JSON.stringify({ dist, elev, dur, diff, vibes, extra, region: currentRegion })
     });
 
     if (!res.ok) {
@@ -182,11 +217,8 @@ async function planTrails() {
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
-
       const chunk = decoder.decode(value);
-      const lines = chunk.split('\n');
-
-      for (const line of lines) {
+      for (const line of chunk.split('\n')) {
         if (line.startsWith('data: ')) {
           const data = line.slice(6);
           if (data === '[DONE]') break;
